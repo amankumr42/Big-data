@@ -1,0 +1,26 @@
+TwitterAgent.sources= Twitter
+TwitterAgent.channels= MemChannel
+TwitterAgent.sinks=HDFS
+TwitterAgent.sources.Twitter.type =org.apache.flume.source.twitter.TwitterSource
+
+TwitterAgent.sources.Twitter.channels=MemChannel
+
+TwitterAgent.sources.Twitter.consumerKey=gzpt1S1Z2bgTYHn2uIPZIzavS
+TwitterAgent.sources.Twitter.consumerSecret=Q7JEeGQ631TbPW440Wwk629l5ets0cjjfCmbRhou4ieh7usT0V
+TwitterAgent.sources.Twitter.accessToken=852023484397961220-3op6e5RMmFO6N4hs99NmyizOS5GcXzF
+TwitterAgent.sources.Twitter.accessTokenSecret=41Af3jcnJq6OHFHVU9DGPI3nORojHkMQ4TJmaE7j4n5B6
+
+TwitterAgent.sources.Twitter.keywords= spark, hadoop, scientist, bigdata, analytics, data science, data scientist, big data, cloud computing
+
+TwitterAgent.sinks.HDFS.channel=MemChannel
+TwitterAgent.sinks.HDFS.type=hdfs
+TwitterAgent.sinks.HDFS.hdfs.path=hdfs://54.175.242.105:8020//DATA/twitterData
+TwitterAgent.sinks.HDFS.hdfs.fileType=DataStream
+TwitterAgent.sinks.HDFS.hdfs.writeformat=Text
+TwitterAgent.sinks.HDFS.hdfs.batchSize=1000
+TwitterAgent.sinks.HDFS.hdfs.rollSize=0
+TwitterAgent.sinks.HDFS.hdfs.rollCount=10000
+TwitterAgent.sinks.HDFS.hdfs.rollInterval=600
+TwitterAgent.channels.MemChannel.type=memory
+TwitterAgent.channels.MemChannel.capacity=10000
+TwitterAgent.channels.MemChannel.transactionCapacity=100

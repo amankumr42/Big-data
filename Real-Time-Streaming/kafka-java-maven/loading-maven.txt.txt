@@ -1,0 +1,8 @@
+step 1->mvn archetype:generate -DgroupId=org.apache.kafka   -DartifactId=kafka-clients -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false// initialize the maven
+
+step 2->mvn compile// compile your sources
+
+step3 ->mvn clean package //Create a Jar file 
+
+
+//https://docs.hortonworks.com/HDPDocuments/HDP2/HDP-2.6.2/bk_kafka-component-guide/content/kafka-producer-settings.html

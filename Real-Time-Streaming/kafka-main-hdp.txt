@@ -1,0 +1,5 @@
+/usr/hdp/current/kafka-broker/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 3 --partitions 1 --topic truckevent
+
+/usr/hdp/current/kafka-broker/bin/kafka-console-producer.sh --broker-list ip-172-31-60-179.ec2.internal:6667 --topic truckevent
+
+/usr/hdp/current/kafka-broker/bin/kafka-console-consumer.sh --zookeeper  ip-172-31-20-58.ec2.internal:2181  --topic truckevent --from-beginning

@@ -1,0 +1,45 @@
+//Developing kafka producer using java API
+/*Steps for java API
+STEP 1: setup prodcuer configuration
+
+Properties props = new Properties();
+props.put("metadata.broker.list","localhost:9092")// setting up the broker
+props.out("SerializerClass","kafka.serializer.String.Encoder")
+//The above properties is mandatory properties
+//Serialization -> it is the process to convert all the raw data into the binary String
+ProducerConfig config = new ProducerConfig(props);
+
+
+STEP 2: GET A HANDLE TO PRODUCER CONNECTION
+
+Producer producer = new Producer(config); // passing the info about config to producer
+
+STEP 3: CREATE MESSAGE AS KEY VALUE PAIR
+
+String key1 = first
+
+String value1 = "this is the first message"
+
+
+STEP 4: SUBMIT MESSAGES TO PARTICULAR TOPIC
+
+String Topic = "topic_name"
+keyMessage data = new keyMessage(topic_name,key1,value1);
+producer.send(data) 
+
+STEP 5: CLOSE THE CONNECTION
+producer.close()
+
+*/CONSUMER SIDE API
+
+STEP1 : SETUP CONSUMER CONFIGURATION PROPERTIES
+
+STEP2 : GET A HANDLE FOR CONSUMER CONNECTION
+
+STEP3:  GET A STREAM OF MESSAGE FROM YOUR TOPIC
+
+STEP4: LOOP OVER MESSAGE AND CONSUME IT
+
+STEP5 : CLOSING CONSUMER CONNECTION
+
+*/
