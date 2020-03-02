@@ -1,0 +1,1 @@
+sqoop import --connect jdbc:mysql://localhost:3306/mysql --username root --password root --columns id,last_name,company --table employee --target-dir /user/amank/testDir --fields-terminated-by "," --hive-import --create-hive-table --hive-table default.hive_tbl_name -m 1

@@ -1,0 +1,1 @@
+sqoop import --connect jdbc:mysql://localhost/mysql --username root --password root --table employee --m 1 --target-dir /tmp/queryResult
