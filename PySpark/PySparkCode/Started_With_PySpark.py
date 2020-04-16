@@ -38,3 +38,22 @@ maxSQl = spark.sql("select DEST_COUNTRY_NAME , sum(count) as destination_total f
 from pyspark.sql.functions import desc
 flighData2015.groupBy("DEST_COUNTRY_NAME").sum("count").withColumRenamed("sum(count)","destination_total").sort(desc ("DEST_COUNTRY_NAME")).limit(5).show()
 
+# Structured streaming
+staticDataFrame = spark.read.format("csv").option("header","true").option("inferschema","true").load("/root/Big-data/PySpark/Data/retail-data/by-day/*.csv")
+
+staticDataFrame.createOrReplaceTempView("retail_data")
+staticSchema =  staticDataFrame.schema
+
+# import window function
+from pyspark.sql.functions import window , column , desc , col
+
+staticDataFrame.selectExpr("CustomerId","(UnitPrice * Quantity) as total_cost","InvoiceDate").groupBy(col("CustomerId"), window(col("InvoiceDate"), "1 day")).sum("total_cost").show(5)
+
+# Get the Streaming data frame
+streamingDataFrame = spark.readStream.schema(staticschema).option("maxFilePerTrigger","1").format("csv").option("header","true").load("/root/Big-data/PySpark/Data/retail-data/by-day/*.csv")
+
+purchaseByCustomerPerHour = streamingDataFrame.selectExpr("CustomerId","(UnitPrice * Quantity) as total_cost","InvoiceDate").groupBy(col("CustomerId"),window(col("InvoiceDate"), "1 day")).sum("total_cost")
+
+purchaseByCustomerPerHour.writeStream.format("memory").queryName("customer_purchases").outputMode("complete").start()
+
+
