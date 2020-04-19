@@ -35,3 +35,40 @@ myRow = Row("Hello",None,1,False)
 # Accessing the rows in spark
 myRow[0] 
 myRow[2]
+
+# Data Frame Operations
+
+from pyspark.sql import Row
+from pyspark.sql.types import StructField, StructType , StringType , LongType
+
+myManualSchema = StructType ([StructField("some",StringType() , True ),StructField("col",StringType(), True),StructField("names", LongType(), False)])
+
+myRow = Row("Hello",null,False)
+
+myDf = spark.createDataFrame([myRow],myManualSchema)
+myDf.show()
+
+# Select and selectExp
+
+df.select("DEST_COUNTRY_NAME").show(2)
+
+# Selecting multiple column from data frame
+
+df.select("DEST_COUNTRY_NAME","ORIGIN_COUNTRY_NAME").show()
+
+# Select Exp example
+
+df.selectExpr("*","(DEST_COUNTRY_NAME = ORIGIN_COUNTRY_NAME) as withinCountry").show()
+
+
+# Adding columns in spark - 1
+
+from  pyspark.sql.functions import lit
+
+df.withColumn("numberOne",lit(1)).show(2)
+
+from  pyspark.sql.functions import expr
+df.withColumn("withinCoutry",expr("ORIGIN_COUNTRY_NAME == DEST_COUNTRY_NAME")).show(2)
+
+
+ 
