@@ -1,70 +1,64 @@
-from pyspark.sql.functions import expr
 from pyspark.sql import SparkSession
-from pyspark import SparkContext
 from pyspark.sql.types import StructField, StructType, StringType, LongType
-from pyspark.sql.functions import lit
+from pyspark.sql.functions import col, column
 from pyspark.sql import Row
-from pyspark.sql.functions import col
 
 # Create Spark Session
-spark = SparkSession.builder.master("local").appName("wordCount").getOrCreate()
+spark = SparkSession.builder.master("local").appName("Data_Frame_Operation").getOrCreate()
 
-# create Data Frame in spark
-
+# Create Data Frame
 df = spark.read.format("json").option('encoding', 'UTF-8').load(
     "M:/Spark-Learning/Big-data/PySpark/Data/flight-data/json/2015-summary.json")
 
-# Print file schema
+# Print Schema
 df.printSchema()
 
-# Check the Schema structure
-df.schema
+# Check the schema of the loaded json data
+print (spark.read.format("json").load("M:/Spark-Learning/Big-data/PySpark/Data/flight-data/json/2015-summary.json")
+       .schema)
 
-# Define own schema structure and associate custom attribute with it
-
+# Load data into the data frame using custom defined schema
 myManualSchema = StructType(
-    [StructField("DEST_COUNTRY_NAME", StringType(), True), StructField("ORIGIN_COUNTRY_NAME", StringType(), True),
-     StructField("count", LongType(), True, metadata={"hello": "world"})])
+    [StructField("DEST_COUNTRY_NAME", StringType(), True),
+     StructField("ORIGIN_COUNTRY_NAME", StringType(), True),
+     StructField("count", LongType(), False, metadata={"hello": "world"})])
 
-df = spark.read.format("json").schema(myManualSchema).load(
-    "M:/Spark-Learning/Big-data/PySpark/Data/flight-data/json/2015-summary.json")
+# Add manual schema in the data frame
+df = spark.read.format("json").option('encoding', 'UTF-8').schema(myManualSchema).\
+    load("M:/Spark-Learning/Big-data/PySpark/Data/flight-data/json/2015-summary.json")
 
-# Construct column for data frame
+# df.printSchema()
 
-col("someColumnName")
+print (col("someColumnName"))
+print (column("someColumnName"))
 
-# Working with Row in spark
-myRow = Row("Hello", None, 1, False)
+# Access Data Frame's Columns
+print (df.columns)
 
-# Accessing the rows in spark
-myRow[0]
-myRow[2]
+# Calling first row from data frame
+print (df.first)
 
-# Data Frame Operations
+# Creating ROW
+myRow = Row("hello", None, 1, False)
+print (myRow[0])
+print (myRow[2])
 
-myManualSchema = StructType([StructField("some", StringType(), True),
-                             StructField("col", StringType(), True),
-                             StructField("names", LongType(), False)])
+# DataFrame Transformation (1. Add rows or Col.  2. Remove row or Col 3. Transform row into col (vice-versa)
 
-myRow = Row("Hello", None, 17)
+# Create data frame on fly
+myManualSchema = StructType(
+    [StructField("DEST_COUNTRY_NAME", StringType(), True),
+     StructField("ORIGIN_COUNTRY_NAME", StringType(), True),
+     StructField("count", LongType(), False, metadata={"hello": "world"})])
 
-myDf = spark.createDataFrame([myRow], myManualSchema)
+myRow = Row("Hello", None, 1)
+myDf = spark.createDataFrame([myRow],myManualSchema)
 myDf.show()
 
-# Select and selectExp
-
+# Select and SelectExpr
+# Selecting single column
 df.select("DEST_COUNTRY_NAME").show(2)
 
-# Selecting multiple column from data frame
+# Selecting multiple column
+df.select("DEST_COUNTRY_NAME","ORIGIN_COUNTRY_NAME").show(2)
 
-df.select("DEST_COUNTRY_NAME", "ORIGIN_COUNTRY_NAME").show()
-
-# Select Exp example
-
-df.selectExpr("*", "(DEST_COUNTRY_NAME = ORIGIN_COUNTRY_NAME) as withinCountry").show()
-
-# Adding columns in spark - 1
-
-df.withColumn("numberOne", lit(1)).show(2)
-
-df.withColumn("withinCoutry", expr("ORIGIN_COUNTRY_NAME == DEST_COUNTRY_NAME")).show(2)
