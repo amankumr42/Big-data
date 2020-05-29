@@ -1,6 +1,6 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructField, StructType, StringType, LongType
-from pyspark.sql.functions import col, column
+from pyspark.sql.functions import col, column, expr, lit
 from pyspark.sql import Row
 
 # Create Spark Session
@@ -62,3 +62,47 @@ df.select("DEST_COUNTRY_NAME").show(2)
 # Selecting multiple column
 df.select("DEST_COUNTRY_NAME","ORIGIN_COUNTRY_NAME").show(2)
 
+df.select(
+    expr("DEST_COUNTRY_NAME"),
+    col("DEST_COUNTRY_NAME"),
+    column("DEST_COUNTRY_NAME")
+).show(2)
+
+# Using Alias -- select DEST_COUNTRY_NAME as destination from table
+df.select(expr("DEST_COUNTRY_NAME As destination")).show(2)
+df.select(expr ("DEST_COUNTRY_NAME As destination").alias("DEST_COUNTRY_NAME")).show(2)
+df.selectExpr("DEST_COUNTRY_NAME As destination","DEST_COUNTRY_NAME").show(2)
+
+# SelectExpr Example -- Comparing the column value return boolean
+df.selectExpr(
+    "*","(DEST_COUNTRY_NAME = ORIGIN_COUNTRY_NAME ) as withinCountry"
+).show(2)
+
+df.selectExpr(
+    "avg(count)","count(distinct(DEST_COUNTRY_NAME))"
+).show(10)
+
+df.select(
+    expr("*"),lit(1).alias("one")
+).show(10)
+
+# Adding Columns -- Select *,1 as numberOne from dftable limit 2
+df.withColumn("numberOne",lit(1)).show(2)
+
+# Renaming the column name
+#df.withColumnRenamed("DEST_COUNTRY_NAME","dest").columns
+
+# Removing Columns
+#df.drop("ORIGIN_COUNTRY_NAME","DEST_COUNTRY_NAME")
+
+# Changing the Column Type (cast) -- select *, cast(count as long) as count2 from dftable
+df.withColumn("count2",col("count").cast("long"))
+
+# Filter Rows -- select * from dftable where count < 2 limit 2
+df.filter(col("count")<2).show(2)
+
+# -- select * from dftable where count <2 and ORIGIN_COUNTRY_NAME != "Singapore" limit 10
+df.where(col("count")<2).where(col("ORIGIN_COUNTRY_NAME")!= "Singapore").show(10)
+
+# Getting unique Row -- select count(distinct(ORIGIN_COUNTRY_NAME, DEST_COUNTRY_NAME)) from dftable
+df.select("ORIGIN_COUNTRY_NAME","DEST_COUNTRY_NAME").distinct().count()
