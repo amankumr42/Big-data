@@ -2,6 +2,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import StructField, StructType, StringType, LongType
 from pyspark.sql.functions import col, column, expr, lit
 from pyspark.sql import Row
+from pyspark.sql.functions import desc, asc
 
 # Create Spark Session
 spark = SparkSession.builder.master("local").appName("Data_Frame_Operation").getOrCreate()
@@ -106,3 +107,37 @@ df.where(col("count")<2).where(col("ORIGIN_COUNTRY_NAME")!= "Singapore").show(10
 
 # Getting unique Row -- select count(distinct(ORIGIN_COUNTRY_NAME, DEST_COUNTRY_NAME)) from dftable
 df.select("ORIGIN_COUNTRY_NAME","DEST_COUNTRY_NAME").distinct().count()
+
+# Concatenation and Appending Rows
+schema = df.schema
+newRows = [
+    Row("New Country", "Other Country", 5L),
+    Row("New Country 2" , "Other Countrry3", 1L)
+]
+parrelizedRow = spark.sparkContext.parallelize(newRows)
+
+newDF = spark.createDataFrame(parrelizedRow,schema)
+newDF.show()
+
+# Union DF's
+df.union(newDF).where("count=1").where(col("ORIGIN_COUNTRY_NAME")!= "United States").show()
+
+# Sorting Rows
+df.sort("count").show(5)
+df.orderBy("count", "DEST_COUNTRY_NAME").show(5)
+df.orderBy(col("count"),col("DEST_COUNTRY_NAME")).show(5)
+
+# SQL select * from dfTable order by count DESC , DEST_COUNTRY_NAME as asc limit 2
+df.orderBy(col("count").desc(), col("DEST_COUNTRY_NAME").asc()).show(2)
+
+# OPTIMIZING technique Partition -- advisable to sort within each partition before another set of transformation
+spark.read.format("json").load("M:/Spark-Learning/Big-data/PySpark/Data/flight-data/json"
+                               "/2015-summary.json").sortWithinPartitions("count")
+
+# Repartition and Coalesce
+df.rdd.getNumPartitions() # Return number of partition
+
+# -- Filtering column must be repartition for better performance
+df.repartition(3 , col("DEST_COUNTRY_NAME"))
+# Coalesce
+df.repartition(5, col("DEST_COUNTRY_NAME")).coalesce(2)
