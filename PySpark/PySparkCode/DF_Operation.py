@@ -1,74 +1,143 @@
-# create Data Frame in spark
+from pyspark.sql import SparkSession
+from pyspark.sql.types import StructField, StructType, StringType, LongType
+from pyspark.sql.functions import col, column, expr, lit
+from pyspark.sql import Row
+from pyspark.sql.functions import desc, asc
 
-df = spark.read.format("json").load("/root/Big-data/PySpark/Data/flight-data/json/2015-summary.json")
+# Create Spark Session
+spark = SparkSession.builder.master("local").appName("Data_Frame_Operation").getOrCreate()
 
-# Print file schema
+# Create Data Frame
+df = spark.read.format("json").option('encoding', 'UTF-8').load(
+    "M:/Spark-Learning/Big-data/PySpark/Data/flight-data/json/2015-summary.json")
+
+# Print Schema
 df.printSchema()
 
-# Check the Schema structure
-spark.read.format("json").load("/root/Big-data/PySpark/Data/flight-data/json/2015-summary.json").schema
+# Check the schema of the loaded json data
+print (spark.read.format("json").load("M:/Spark-Learning/Big-data/PySpark/Data/flight-data/json/2015-summary.json")
+       .schema)
 
-# Define own schame structure and associate custom attribute with it
+# Load data into the data frame using custom defined schema
+myManualSchema = StructType(
+    [StructField("DEST_COUNTRY_NAME", StringType(), True),
+     StructField("ORIGIN_COUNTRY_NAME", StringType(), True),
+     StructField("count", LongType(), False, metadata={"hello": "world"})])
 
-from pyspark.sql.types import StructField, StructType, StringType, LongType
-myManualSchema = StructType([StructField("DEST_COUNTRY_NAME",StringType(),True), StructField("ORIGIN_COUNTRY_NAME", StringType(),True),StructField("count",LongType(),False,metadata={"hello":"world"})])
+# Add manual schema in the data frame
+df = spark.read.format("json").option('encoding', 'UTF-8').schema(myManualSchema).\
+    load("M:/Spark-Learning/Big-data/PySpark/Data/flight-data/json/2015-summary.json")
 
-df = spark.read.format("json").schema(myManualSchema).load("/root/Big-data/PySpark/Data/flight-data/json/2015-summary.json")
+# df.printSchema()
 
-# Contruct column for data frane
+print (col("someColumnName"))
+print (column("someColumnName"))
 
-from pyspark.sql.functions import col, columns
-col("someColumnName")
+# Access Data Frame's Columns
+print (df.columns)
 
-# or
+# Calling first row from data frame
+print (df.first)
 
-column("someColumnName")
+# Creating ROW
+myRow = Row("hello", None, 1, False)
+print (myRow[0])
+print (myRow[2])
 
-# Explictlt call any column
-col.df("count")
+# DataFrame Transformation (1. Add rows or Col.  2. Remove row or Col 3. Transform row into col (vice-versa)
 
-# Working with Row in spark
+# Create data frame on fly
+myManualSchema = StructType(
+    [StructField("DEST_COUNTRY_NAME", StringType(), True),
+     StructField("ORIGIN_COUNTRY_NAME", StringType(), True),
+     StructField("count", LongType(), False, metadata={"hello": "world"})])
 
-from pyspark.sql import Row
-myRow = Row("Hello",None,1,False)
-
-# Accessing the rows in spark
-myRow[0] 
-myRow[2]
-
-# Data Frame Operations
-
-from pyspark.sql import Row
-from pyspark.sql.types import StructField, StructType , StringType , LongType
-
-myManualSchema = StructType ([StructField("some",StringType() , True ),StructField("col",StringType(), True),StructField("names", LongType(), False)])
-
-myRow = Row("Hello",null,False)
-
+myRow = Row("Hello", None, 1)
 myDf = spark.createDataFrame([myRow],myManualSchema)
 myDf.show()
 
-# Select and selectExp
-
+# Select and SelectExpr
+# Selecting single column
 df.select("DEST_COUNTRY_NAME").show(2)
 
-# Selecting multiple column from data frame
+# Selecting multiple column
+df.select("DEST_COUNTRY_NAME","ORIGIN_COUNTRY_NAME").show(2)
 
-df.select("DEST_COUNTRY_NAME","ORIGIN_COUNTRY_NAME").show()
+df.select(
+    expr("DEST_COUNTRY_NAME"),
+    col("DEST_COUNTRY_NAME"),
+    column("DEST_COUNTRY_NAME")
+).show(2)
 
-# Select Exp example
+# Using Alias -- select DEST_COUNTRY_NAME as destination from table
+df.select(expr("DEST_COUNTRY_NAME As destination")).show(2)
+df.select(expr ("DEST_COUNTRY_NAME As destination").alias("DEST_COUNTRY_NAME")).show(2)
+df.selectExpr("DEST_COUNTRY_NAME As destination","DEST_COUNTRY_NAME").show(2)
 
-df.selectExpr("*","(DEST_COUNTRY_NAME = ORIGIN_COUNTRY_NAME) as withinCountry").show()
+# SelectExpr Example -- Comparing the column value return boolean
+df.selectExpr(
+    "*","(DEST_COUNTRY_NAME = ORIGIN_COUNTRY_NAME ) as withinCountry"
+).show(2)
 
+df.selectExpr(
+    "avg(count)","count(distinct(DEST_COUNTRY_NAME))"
+).show(10)
 
-# Adding columns in spark - 1
+df.select(
+    expr("*"),lit(1).alias("one")
+).show(10)
 
-from  pyspark.sql.functions import lit
-
+# Adding Columns -- Select *,1 as numberOne from dftable limit 2
 df.withColumn("numberOne",lit(1)).show(2)
 
-from  pyspark.sql.functions import expr
-df.withColumn("withinCoutry",expr("ORIGIN_COUNTRY_NAME == DEST_COUNTRY_NAME")).show(2)
+# Renaming the column name
+#df.withColumnRenamed("DEST_COUNTRY_NAME","dest").columns
 
+# Removing Columns
+#df.drop("ORIGIN_COUNTRY_NAME","DEST_COUNTRY_NAME")
 
- 
+# Changing the Column Type (cast) -- select *, cast(count as long) as count2 from dftable
+df.withColumn("count2",col("count").cast("long"))
+
+# Filter Rows -- select * from dftable where count < 2 limit 2
+df.filter(col("count")<2).show(2)
+
+# -- select * from dftable where count <2 and ORIGIN_COUNTRY_NAME != "Singapore" limit 10
+df.where(col("count")<2).where(col("ORIGIN_COUNTRY_NAME")!= "Singapore").show(10)
+
+# Getting unique Row -- select count(distinct(ORIGIN_COUNTRY_NAME, DEST_COUNTRY_NAME)) from dftable
+df.select("ORIGIN_COUNTRY_NAME","DEST_COUNTRY_NAME").distinct().count()
+
+# Concatenation and Appending Rows
+schema = df.schema
+newRows = [
+    Row("New Country", "Other Country", 5L),
+    Row("New Country 2" , "Other Countrry3", 1L)
+]
+parrelizedRow = spark.sparkContext.parallelize(newRows)
+
+newDF = spark.createDataFrame(parrelizedRow,schema)
+newDF.show()
+
+# Union DF's
+df.union(newDF).where("count=1").where(col("ORIGIN_COUNTRY_NAME")!= "United States").show()
+
+# Sorting Rows
+df.sort("count").show(5)
+df.orderBy("count", "DEST_COUNTRY_NAME").show(5)
+df.orderBy(col("count"),col("DEST_COUNTRY_NAME")).show(5)
+
+# SQL select * from dfTable order by count DESC , DEST_COUNTRY_NAME as asc limit 2
+df.orderBy(col("count").desc(), col("DEST_COUNTRY_NAME").asc()).show(2)
+
+# OPTIMIZING technique Partition -- advisable to sort within each partition before another set of transformation
+spark.read.format("json").load("M:/Spark-Learning/Big-data/PySpark/Data/flight-data/json"
+                               "/2015-summary.json").sortWithinPartitions("count")
+
+# Repartition and Coalesce
+df.rdd.getNumPartitions() # Return number of partition
+
+# -- Filtering column must be repartition for better performance
+df.repartition(3 , col("DEST_COUNTRY_NAME"))
+# Coalesce
+df.repartition(5, col("DEST_COUNTRY_NAME")).coalesce(2)
